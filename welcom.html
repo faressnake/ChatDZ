@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>مرحبا بك في شات دارجة GPT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="favicon.png" type="image/png">
+<link rel="shortcut icon" href="favicon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;800&family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Cairo', 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1f0036, #3b0080, #0078d7);
+      color: #ffffff;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loader-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ffffff;
+      animation: pulseText 1.5s infinite ease-in-out;
+      text-align: center;
+    }
+
+    @keyframes pulseText {
+      0% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 0.3; transform: scale(1); }
+    }
+
+    #mainContent {
+      display: none;
+    }
+
+    .welcome-container {
+      backdrop-filter: blur(18px);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
+      padding: 40px;
+      max-width: 650px;
+      width: 90%;
+      text-align: center;
+      animation: fadeIn 1.2s ease-in-out;
+      transition: all 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #ffffff, #00ffe5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      font-size: 1.3rem;
+      color: #ddd;
+      margin-bottom: 35px;
+    }
+
+    button {
+      background: linear-gradient(90deg, #00c6ff, #0078d7);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- لودر -->
+  <div id="loader">
+    <div class="loader-text">⏳ راهو يحمّل... صبر شوية</div>
+  </div>
+
+  <!-- المحتوى الرئيسي -->
+  <div id="mainContent" class="welcome-container">
+    <h1>👋 مرحبا بك في شات دارجة GPT 🇩🇿</h1>
+    <p>مساعد ذكي يفهمك بالدارجة، يعاونك فالدراسة، الخدمة، وحتى الضحك 😉</p>
+    <button onclick="location.href='chat.html'">🚀 ابدأ الآن</button>
+  </div>
+
+  <script>
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+      }, 1400);
+    });
+  </script>
+
+</body>
+</html>
