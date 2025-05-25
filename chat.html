@@ -853,12 +853,16 @@ chat.scrollTop = chat.scrollHeight;
 
   const data = await response.json();
   console.log(data);
-
-  if (data.error) {
-    alert("🚫 خطأ في الاتصال بـ OpenAI: " + data.error.message);
-    return;
+// إذا كان الخطأ موجود
+if (data.error) {
+  if (data.error.code === "rate_limit_exceeded" || data.error.message.includes("rate limit")) {
+    appendMessage("صرا خلل، اصبر شوية", "bot");
+  } else {
+    appendMessage("🚫 خطأ في الاتصال بـ OpenAI: " + data.error.message, "bot");
   }
-
+  return; // نوقف تنفيذ الكود ما نروحش للـ API ثاني
+}
+ 
   const reply = data.choices?.[0]?.message?.content || "معليش، ما فهمتش، جرب تكتب حاجة ثانية 💬";
   document.getElementById("typing")?.remove();
 
