@@ -45,14 +45,14 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getDatabase, ref, set, remove, push, onValue } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+    import { getDatabase, ref, set, remove, push, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCKYogae4zNyUB5BlDBPF2F-5HuXJijs0U",
       authDomain: "chatdz-106bd.firebaseapp.com",
       databaseURL: "https://chatdz-106bd-default-rtdb.firebaseio.com",
       projectId: "chatdz-106bd",
-      storageBucket: "chatdz-106bd.firebasestorage.app",
+      storageBucket: "chatdz-106bd.appspot.com",
       messagingSenderId: "965553218415",
       appId: "1:965553218415:web:1cee50095bb2465c38be9a",
       measurementId: "G-KJWZFMY5ZK"
@@ -61,10 +61,43 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // عدد الزوار + الجدول + الرسم البياني
+    // تسجيل زيارة وحدة فقط
+    if (!sessionStorage.getItem("visited")) {
+      fetch("https://ipapi.co/json")
+        .then(res => res.json())
+        .then(location => {
+          const visitRef = push(ref(db, "visits"));
+          set(visitRef, {
+            time: Date.now(),
+            country: location.country_name || "؟",
+            city: location.city || "؟",
+            device: navigator.userAgent
+          });
+          sessionStorage.setItem("visited", "true");
+        })
+        .catch(() => {
+          // fallback في حال فشل API
+          const visitRef = push(ref(db, "visits"));
+          set(visitRef, {
+            time: Date.now(),
+            country: "؟",
+            city: "؟",
+            device: navigator.userAgent
+          });
+          sessionStorage.setItem("visited", "true");
+        });
+    }
+
+    // ✅ تسجيل كمستخدم متصل الآن
+    const userId = `user_${Math.random().toString(36).substr(2, 9)}`;
+    const userRef = ref(db, `onlineUsers/${userId}`);
+    set(userRef, true);
+    onDisconnect(userRef).remove();
+
+    // ✅ عدد الزوار و الرسم البياني
     const visitCountElement = document.getElementById("visitCount");
-    const visitTimes = [];
     const visitsTable = document.getElementById("visitsTableBody");
+    const visitTimes = [];
 
     onValue(ref(db, "visits"), (snapshot) => {
       const data = snapshot.val();
@@ -73,17 +106,19 @@
       visitCountElement.innerText = values.length;
       visitsTable.innerHTML = "";
       visitTimes.length = 0;
+
       values.forEach(v => {
         visitsTable.innerHTML += `
           <tr>
-            <td>${v.country || "?"}</td>
-            <td>${v.city || "?"}</td>
-            <td>${v.device || "?"}</td>
+            <td>${v.country || "؟"}</td>
+            <td>${v.city || "؟"}</td>
+            <td>${v.device.slice(0, 30)}...</td>
             <td>${new Date(v.time).toLocaleTimeString()}</td>
           </tr>
         `;
         visitTimes.push(new Date(v.time).toLocaleTimeString());
       });
+
       drawChart(visitTimes);
     });
 
@@ -92,7 +127,7 @@
       new Chart(ctx, {
         type: 'line',
         data: {
-          labels: times.map((t, i) => `${i + 1}`),
+          labels: times.map((_, i) => `${i + 1}`),
           datasets: [{
             label: 'عدد الزوار',
             data: times.map(() => 1),
@@ -108,23 +143,30 @@
       });
     }
 
-    // عدد المتصلين الآن
+    // ✅ عدد المتصلين الآن
     const onlineCountEl = document.getElementById("onlineCount");
     onValue(ref(db, "onlineUsers"), (snapshot) => {
       const data = snapshot.val();
       onlineCountEl.innerText = data ? Object.keys(data).length : "0";
     });
 
-    // المحادثات
+    // ✅ عرض المحادثات
     const chatTable = document.getElementById("chatTableBody");
-    onValue(ref(db, 'messages/chat_1'), (snapshot) => {
+    onValue(ref(db, "messages/chat_1"), (snapshot) => {
       const data = snapshot.val();
       chatTable.innerHTML = "";
       if (!data) return;
       Object.values(data).forEach(msg => {
-        chatTable.innerHTML += `<tr><td>${msg.sender}</td><td>${msg.text}</td><td>${new Date(msg.time).toLocaleTimeString()}</td></tr>`;
+        chatTable.innerHTML += `
+          <tr>
+            <td>${msg.sender || "؟"}</td>
+            <td>${msg.text || ""}</td>
+            <td>${new Date(msg.time).toLocaleTimeString()}</td>
+          </tr>
+        `;
       });
     });
   </script>
 </body>
 </html>
+
