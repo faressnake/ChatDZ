@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 لوحة تحكم ChatDZ</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; direction: rtl; background: #f9f9f9; }
+    h1, h2 { color: #333; }
+    canvas { margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #eee; }
+  </style>
+</head>
+<body>
+  <h1>📊 لوحة تحكم ChatDZ</h1>
+  <p>👥 عدد الزوار الكلي: <strong id="visitCount">0</strong></p>
+  <p>🟢 عدد المتصلين الآن: <strong id="onlineCount">0</strong></p>
+  <canvas id="visitsChart" height="100"></canvas>
+
+  <h2>💬 رسائل المستخدم والبوت</h2>
+  <table>
+    <thead><tr><th>المرسل</th><th>الرسالة</th></tr></thead>
+    <tbody id="chatTableBody"></tbody>
+  </table>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getDatabase, ref, set, remove, push, onValue } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCKYogae4zNyUB5BlDBPF2F-5HuXJijs0U",
+      authDomain: "chatdz-106bd.firebaseapp.com",
+      databaseURL: "https://chatdz-106bd-default-rtdb.firebaseio.com",
+      projectId: "chatdz-106bd",
+      storageBucket: "chatdz-106bd.firebasestorage.app",
+      messagingSenderId: "965553218415",
+      appId: "1:965553218415:web:1cee50095bb2465c38be9a",
+      measurementId: "G-KJWZFMY5ZK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 🧍‍♂️ تسجيل المتصل حاليا
+    const userId = "user_" + Math.floor(Math.random() * 1000000);
+    const userRef = ref(db, 'onlineUsers/' + userId);
+    set(userRef, { time: new Date().toISOString() });
+    window.addEventListener("beforeunload", () => remove(userRef));
+
+    // 🔢 عدد الزوار
+    const visitCountElement = document.getElementById("visitCount");
+    const visitTimes = [];
+    onValue(ref(db, 'visits'), (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+      const values = Object.values(data);
+      visitCountElement.innerText = values.length;
+      visitTimes.length = 0;
+      values.forEach(v => visitTimes.push(new Date(v.time).toLocaleTimeString()));
+      drawChart(visitTimes);
+    });
+
+    // 🟢 عدد المتصلين الآن
+    const onlineCountEl = document.getElementById("onlineCount");
+    onValue(ref(db, "onlineUsers"), (snapshot) => {
+      const data = snapshot.val();
+      onlineCountEl.innerText = data ? Object.keys(data).length : "0";
+    });
+
+    // 💬 رسائل
+    const chatTable = document.getElementById("chatTableBody");
+    onValue(ref(db, 'messages/chat_1'), (snapshot) => {
+      const data = snapshot.val();
+      chatTable.innerHTML = "";
+      if (!data) return;
+      Object.values(data).forEach(msg => {
+        chatTable.innerHTML += `<tr><td>${msg.sender}</td><td>${msg.text}</td></tr>`;
+      });
+    });
+
+    // 📊 رسم بياني
+    function drawChart(labels) {
+      const ctx = document.getElementById('visitsChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'عدد الزوار',
+            data: labels.map(() => 1),
+            backgroundColor: 'rgba(75, 192, 192, 0.6)'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
