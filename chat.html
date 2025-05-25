@@ -1336,7 +1336,33 @@ function analyzeMood(moodType = "") {
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
   const db = getDatabase(app);
+// منع التكرار بنفس الجهاز
+const visitorId = localStorage.getItem("chatdz_visitor_id") || crypto.randomUUID();
+localStorage.setItem("chatdz_visitor_id", visitorId);
 
+// الحصول على معلومات الجهاز + موقع
+const device = /Mobi|Android/i.test(navigator.userAgent) ? "موبايل" : "حاسوب";
+
+fetch("https://ipapi.co/json/")
+  .then(res => res.json())
+  .then(data => {
+    const info = {
+      country: data.country_name || "غير معروف",
+      city: data.city || "غير معروف",
+      device,
+      time: Date.now()
+    };
+
+    set(ref(db, "visits/" + visitorId), info);
+    const onlineRef = ref(db, "onlineUsers/" + visitorId);
+    set(onlineRef, {
+      ip: data.ip,
+      connectedAt: Date.now()
+    });
+
+    onDisconnect(onlineRef).remove(); // يحذفو كي يخرج
+  })
+  .catch(err => console.error("خطأ في جلب الموقع:", err));
     function logVisitor() {
       const visitRef = ref(db, "visits");
       const newVisit = push(visitRef);
