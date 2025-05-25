@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>📈 تحليلات موقع ChatDZ</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; direction: rtl; background: #f0f0f0; padding: 20px; }
+    h1, h2 { color: #222; }
+    canvas { margin: 20px 0; background: white; border-radius: 8px; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 14px; }
+    th { background-color: #eee; }
+    .section { margin-bottom: 40px; }
+  </style>
+</head>
+<body>
+  <h1>📈 لوحة تحليلات ChatDZ</h1>
+
+  <div class="section">
+    <p>👥 عدد الزوار الكلي: <strong id="visitCount">0</strong></p>
+    <p>🟢 عدد المتصلين الآن: <strong id="onlineCount">0</strong></p>
+  </div>
+
+  <div class="section">
+    <h2>📊 منحنى عدد الزوار</h2>
+    <canvas id="visitsChart" height="100"></canvas>
+  </div>
+
+  <div class="section">
+    <h2>🌍 معلومات الزوار</h2>
+    <table>
+      <thead><tr><th>الدولة</th><th>المدينة</th><th>نوع الجهاز</th><th>الوقت</th></tr></thead>
+      <tbody id="visitsTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>💬 كل المحادثات</h2>
+    <table>
+      <thead><tr><th>المرسل</th><th>الرسالة</th><th>الوقت</th></tr></thead>
+      <tbody id="chatTableBody"></tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getDatabase, ref, set, remove, push, onValue } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCKYogae4zNyUB5BlDBPF2F-5HuXJijs0U",
+      authDomain: "chatdz-106bd.firebaseapp.com",
+      databaseURL: "https://chatdz-106bd-default-rtdb.firebaseio.com",
+      projectId: "chatdz-106bd",
+      storageBucket: "chatdz-106bd.firebasestorage.app",
+      messagingSenderId: "965553218415",
+      appId: "1:965553218415:web:1cee50095bb2465c38be9a",
+      measurementId: "G-KJWZFMY5ZK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // عدد الزوار + الجدول + الرسم البياني
+    const visitCountElement = document.getElementById("visitCount");
+    const visitTimes = [];
+    const visitsTable = document.getElementById("visitsTableBody");
+
+    onValue(ref(db, "visits"), (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+      const values = Object.values(data);
+      visitCountElement.innerText = values.length;
+      visitsTable.innerHTML = "";
+      visitTimes.length = 0;
+      values.forEach(v => {
+        visitsTable.innerHTML += `
+          <tr>
+            <td>${v.country || "?"}</td>
+            <td>${v.city || "?"}</td>
+            <td>${v.device || "?"}</td>
+            <td>${new Date(v.time).toLocaleTimeString()}</td>
+          </tr>
+        `;
+        visitTimes.push(new Date(v.time).toLocaleTimeString());
+      });
+      drawChart(visitTimes);
+    });
+
+    function drawChart(times) {
+      const ctx = document.getElementById("visitsChart").getContext("2d");
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: times.map((t, i) => `${i + 1}`),
+          datasets: [{
+            label: 'عدد الزوار',
+            data: times.map(() => 1),
+            borderColor: 'rgba(75, 192, 192, 1)',
+            fill: false,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true } }
+        }
+      });
+    }
+
+    // عدد المتصلين الآن
+    const onlineCountEl = document.getElementById("onlineCount");
+    onValue(ref(db, "onlineUsers"), (snapshot) => {
+      const data = snapshot.val();
+      onlineCountEl.innerText = data ? Object.keys(data).length : "0";
+    });
+
+    // المحادثات
+    const chatTable = document.getElementById("chatTableBody");
+    onValue(ref(db, 'messages/chat_1'), (snapshot) => {
+      const data = snapshot.val();
+      chatTable.innerHTML = "";
+      if (!data) return;
+      Object.values(data).forEach(msg => {
+        chatTable.innerHTML += `<tr><td>${msg.sender}</td><td>${msg.text}</td><td>${new Date(msg.time).toLocaleTimeString()}</td></tr>`;
+      });
+    });
+  </script>
+</body>
+</html>
