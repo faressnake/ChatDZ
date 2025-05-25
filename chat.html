@@ -30,6 +30,16 @@
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
+
+     // 🔍 تسجل الزائر
+  function logVisitor() {
+    const refVisit = ref(db, "visits");
+    const newVisit = push(refVisit);
+    set(newVisit, {
+      time: new Date().toISOString(),
+      device: navigator.userAgent
+    });
+  }
 </script>
   <title>ChatDZ</title>
   <script>
