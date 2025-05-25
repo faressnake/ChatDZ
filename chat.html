@@ -8,39 +8,6 @@
 <meta name="author" content="Fares Dev">
   <link rel="icon" href="favicon.png" type="image/png">
 <link rel="shortcut icon" href="favicon.png" type="image/png">
-  <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyCDlHUdm4whD-H6Kl754hY4EVurLHwe_BI",
-    authDomain: "chatdz-4459f.firebaseapp.com",
-    projectId: "chatdz-4459f",
-    storageBucket: "chatdz-4459f.firebasestorage.app",
-    messagingSenderId: "88514433971",
-    appId: "1:88514433971:web:c5d5c660837363ced831c6",
-    measurementId: "G-PZXFR7TRG7"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-
-     // 🔍 تسجل الزائر
-  function logVisitor() {
-    const refVisit = ref(db, "visits");
-    const newVisit = push(refVisit);
-    set(newVisit, {
-      time: new Date().toISOString(),
-      device: navigator.userAgent
-    });
-  }
-</script>
   <title>ChatDZ</title>
   <script>
 fetch('/config.json') // نقرأ ملف الإعداد
@@ -1345,6 +1312,41 @@ function analyzeMood(moodType = "") {
 
 
   </script>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+  import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKYogae4zNyUB5BlDBPF2F-5HuXJijs0U",
+    authDomain: "chatdz-106bd.firebaseapp.com",
+    projectId: "chatdz-106bd",
+    storageBucket: "chatdz-106bd.firebasestorage.app",
+    messagingSenderId: "965553218415",
+    appId: "1:965553218415:web:1cee50095bb2465c38be9a",
+    measurementId: "G-KJWZFMY5ZK"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getDatabase(app);
+
+    function logVisitor() {
+      const visitRef = ref(db, "visits");
+      const newVisit = push(visitRef);
+      set(newVisit, {
+        time: new Date().toISOString(),
+        userAgent: navigator.userAgent
+      });
+    }
+
+    logVisitor();
+</script>
 </body>
 </html>
