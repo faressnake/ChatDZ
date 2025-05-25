@@ -49,18 +49,17 @@
     set(userRef, { time: new Date().toISOString() });
     window.addEventListener("beforeunload", () => remove(userRef));
 
-    // 🔢 عدد الزوار
-    const visitCountElement = document.getElementById("visitCount");
-    const visitTimes = [];
-    onValue(ref(db, 'visits'), (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-      const values = Object.values(data);
-      visitCountElement.innerText = values.length;
-      visitTimes.length = 0;
-      values.forEach(v => visitTimes.push(new Date(v.time).toLocaleTimeString()));
-      drawChart(visitTimes);
-    });
+    // 🔢 حساب الزائر مرة وحدة فقط
+    const userVisited = localStorage.getItem("visitedChatDZ");
+    if (!userVisited) {
+      const visitRef = ref(db, "visits");
+      const newVisit = push(visitRef);
+      set(newVisit, {
+        time: new Date().toISOString(),
+        userAgent: navigator.userAgent
+      });
+      localStorage.setItem("visitedChatDZ", "true");
+    }
 
     // 🟢 عدد المتصلين الآن
     const onlineCountEl = document.getElementById("onlineCount");
@@ -69,7 +68,43 @@
       onlineCountEl.innerText = data ? Object.keys(data).length : "0";
     });
 
-    // 💬 رسائل
+    // 📈 منحنى بياني للزوار
+    const visitCountElement = document.getElementById("visitCount");
+    const visitTimes = [];
+    onValue(ref(db, "visits"), (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+      const values = Object.values(data);
+      visitCountElement.innerText = values.length;
+      visitTimes.length = 0;
+      values.forEach(v => visitTimes.push(new Date(v.time).toLocaleTimeString()));
+      drawLineChart(visitTimes);
+    });
+
+    function drawLineChart(times) {
+      const ctx = document.getElementById("visitsChart").getContext("2d");
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: times.map((t, i) => `${i + 1}`),
+          datasets: [{
+            label: 'زوار حسب التوقيت',
+            data: times.map(() => 1),
+            fill: false,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          }
+        }
+      });
+    }
+
+    // 💬 الرسائل
     const chatTable = document.getElementById("chatTableBody");
     onValue(ref(db, 'messages/chat_1'), (snapshot) => {
       const data = snapshot.val();
@@ -79,28 +114,6 @@
         chatTable.innerHTML += `<tr><td>${msg.sender}</td><td>${msg.text}</td></tr>`;
       });
     });
-
-    // 📊 رسم بياني
-    function drawChart(labels) {
-      const ctx = document.getElementById('visitsChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'عدد الزوار',
-            data: labels.map(() => 1),
-            backgroundColor: 'rgba(75, 192, 192, 0.6)'
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-    }
   </script>
 </body>
 </html>
