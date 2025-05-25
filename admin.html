@@ -43,32 +43,42 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 🧍‍♂️ تسجيل المتصل حاليا
+    // ✅ تسجيل المتصل وحذفه مباشرة كي يخرج
     const userId = "user_" + Math.floor(Math.random() * 1000000);
     const userRef = ref(db, 'onlineUsers/' + userId);
     set(userRef, { time: new Date().toISOString() });
     window.addEventListener("beforeunload", () => remove(userRef));
 
-    // 🔢 حساب الزائر مرة وحدة فقط
-    const userVisited = localStorage.getItem("visitedChatDZ");
-    if (!userVisited) {
-      const visitRef = ref(db, "visits");
-      const newVisit = push(visitRef);
-      set(newVisit, {
-        time: new Date().toISOString(),
-        userAgent: navigator.userAgent
-      });
-      localStorage.setItem("visitedChatDZ", "true");
-    }
-
-    // 🟢 عدد المتصلين الآن
+    // ✅ تحديث عدد المتصلين
     const onlineCountEl = document.getElementById("onlineCount");
     onValue(ref(db, "onlineUsers"), (snapshot) => {
       const data = snapshot.val();
       onlineCountEl.innerText = data ? Object.keys(data).length : "0";
     });
 
-    // 📈 منحنى بياني للزوار
+    // ✅ تسجيل الزائر مرة فاليوم + الدولة + نوع الجهاز
+    const today = new Date().toISOString().split("T")[0];
+    const visited = localStorage.getItem("visitedChatDZ");
+
+    if (visited !== today) {
+      fetch("https://ipinfo.io/json?token=f80f5d0f485ad5")
+        .then(res => res.json())
+        .then(loc => {
+          const visitRef = ref(db, "visits");
+          const newVisit = push(visitRef);
+          set(newVisit, {
+            time: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            country: loc.country,
+            region: loc.region,
+            city: loc.city,
+            device: navigator.userAgent.includes("Mobile") ? "📱 موبايل" : "🖥️ كمبيوتر"
+          });
+          localStorage.setItem("visitedChatDZ", today);
+        });
+    }
+
+    // ✅ رسم المنحنى البياني لعدد الزوار
     const visitCountElement = document.getElementById("visitCount");
     const visitTimes = [];
     onValue(ref(db, "visits"), (snapshot) => {
@@ -88,7 +98,7 @@
         data: {
           labels: times.map((t, i) => `${i + 1}`),
           datasets: [{
-            label: 'زوار حسب التوقيت',
+            label: 'عدد الزوار',
             data: times.map(() => 1),
             fill: false,
             borderColor: 'rgba(75, 192, 192, 1)',
@@ -97,14 +107,12 @@
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: { display: true }
-          }
+          plugins: { legend: { display: true } }
         }
       });
     }
 
-    // 💬 الرسائل
+    // ✅ عرض الرسائل
     const chatTable = document.getElementById("chatTableBody");
     onValue(ref(db, 'messages/chat_1'), (snapshot) => {
       const data = snapshot.val();
